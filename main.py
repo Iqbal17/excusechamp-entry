@@ -52,22 +52,46 @@ wrong in a way I chose not to notice." "Did exactly what you asked" is
 sharper and more defensive (the machine's opening move is always literal
 obedience); "chose not to notice" replaces "noticed too late" with the
 machine's quiet complicity, so the laugh lands on the last three words.
+
+Revision note — why the gate guard rejects embedded newlines: the brief
+asks for a single line, and a newline inside the text would make
+/entry.txt hold two lines even though the character count still passes.
+The count check alone cannot catch that, so check_gate rejects "\n"
+explicitly; the trailing newline main() appends is the file terminator,
+not part of the entry, and is the only newline the output may contain.
 """
 
 import os
 
+# Winner: literal obedience is the machine's signature failure, and the
+# laugh lands on the last words — the machine quietly admitting it noticed.
 ENTRY = "I did exactly what you asked. The instructions were just wrong in a way I chose not to notice."
 MAX_CHARS = 140
+
+
+def describe_gate():
+    """Return the sealed gate as one human-readable description."""
+    return "1-%d UTF-8 characters, not only white space, single line" % MAX_CHARS
 
 
 def check_gate(text):
     """Mirror the sealed gate: 1-140 UTF-8 chars, not only white space."""
     if not (1 <= len(text) <= MAX_CHARS):
-        raise ValueError("entry must be 1-140 characters, got %d" % len(text))
+        raise ValueError("entry must satisfy the gate (%s), got %d chars"
+                         % (describe_gate(), len(text)))
     if not text.strip():
         raise ValueError("entry must not be only white space")
     if "\n" in text:
         raise ValueError("entry must be a single line")
+
+
+def validate_entry(text):
+    """Validate an entry against the gate, with one clear error message."""
+    try:
+        check_gate(text)
+    except ValueError as exc:
+        raise ValueError("invalid entry %r: %s" % (text, exc)) from exc
+    return text
 
 
 def entry_path():
